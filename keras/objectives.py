@@ -28,6 +28,12 @@ def binary_crossentropy(y_true, y_pred):
     y_pred = T.clip(y_pred, epsilon, 1.0 - epsilon)
     return T.nnet.binary_crossentropy(y_pred, y_true).mean()
 
+def mse_angle(y_true, y_pred):
+    '''Compute the mse between two predicted angles (in radians)
+    '''
+    dist = T.min( (y_true - y_pred) % (2*np.pi), (y_pred - y_true) % (2*np.pi)) 
+    return T.sqr(dist).mean()
+
 # aliases
 mse = MSE = mean_squared_error
 mae = MAE = mean_absolute_error

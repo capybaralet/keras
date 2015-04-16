@@ -22,6 +22,7 @@ class Layer(object):
         else:
             return self.input
 
+    # TODO: rename set/get params
     def set_weights(self, weights):
         for p, w in zip(self.params, weights):
             p.set_value(floatX(w))
