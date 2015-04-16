@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import numpy as np
 import time
 import sys
@@ -6,7 +7,7 @@ def get_from_module(identifier, module_params, module_name, instantiate=False):
     if type(identifier) is str:
         res = module_params.get(identifier)
         if not res:
-            raise Exception('Invalid', module_name, ': ' + identifier)
+            raise Exception('Invalid ' + str(module_name) + ': ' + str(identifier))
         if instantiate:
             return res()
         else:

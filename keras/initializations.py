@@ -1,8 +1,9 @@
+from __future__ import absolute_import
 import theano
 import theano.tensor as T
 import numpy as np
 
-from utils.theano_utils import sharedX
+from .utils.theano_utils import sharedX, shared_zeros
 
 def uniform(shape, scale=0.05):
     return sharedX(np.random.uniform(low=-scale, high=scale, size=shape))
@@ -20,6 +21,21 @@ def lecun_uniform(shape):
     scale = 1./np.sqrt(m)
     return uniform(shape, scale)
 
+def glorot_normal(shape):
+    ''' Reference: Glorot & Bengio, AISTATS 2010
+    '''
+    fan_in = shape[0] if len(shape) == 2 else np.prod(shape[1:])
+    fan_out = shape[1] if len(shape) == 2 else shape[0]
+    s = np.sqrt(2. / (fan_in + fan_out))
+    return normal(shape, s)
+
+def he_normal(shape):
+    ''' Reference:  He et al., http://arxiv.org/abs/1502.01852
+    '''
+    fan_in = shape[1] if len(shape) == 2 else np.prod(shape[1:])
+    s = np.sqrt(2. / fan_in)
+    return normal(shape, s)
+
 def orthogonal(shape, scale=1.1):
     ''' From Lasagne
     '''
@@ -30,7 +46,10 @@ def orthogonal(shape, scale=1.1):
     q = q.reshape(shape)
     return sharedX(scale * q[:shape[0], :shape[1]])
 
+def zero(shape):
+    return shared_zeros(shape)
 
-from utils.generic_utils import get_from_module
+
+from .utils.generic_utils import get_from_module
 def get(identifier):
     return get_from_module(identifier, globals(), 'initialization')

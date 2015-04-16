@@ -1,5 +1,8 @@
+from __future__ import absolute_import
 import numpy as np
 import scipy as sp
+from six.moves import range
+from six.moves import zip
 
 def to_categorical(y, nb_classes=None):
     '''Convert class vector (integers from 0 to nb_classes)
@@ -12,6 +15,11 @@ def to_categorical(y, nb_classes=None):
     for i in range(len(y)):
         Y[i, y[i]] = 1.
     return Y
+
+def normalize(a, axis=-1, order=2):
+    l2 = np.atleast_1d(np.linalg.norm(a, order, axis))
+    l2[l2==0] = 1
+    return a / np.expand_dims(l2, axis)
 
 
 def binary_logloss(p, y):
@@ -38,21 +46,3 @@ def probas_to_classes(y_pred):
 
 def categorical_probas_to_classes(p):
     return np.argmax(p, axis=1)
-
-
-def save_array(array, name):
-    import tables
-    f = tables.open_file(name, 'w')
-    atom = tables.Atom.from_dtype(array.dtype)
-    ds = f.createCArray(f.root, 'data', atom, array.shape)
-    ds[:] = array
-    f.close()
-
-def load_array(name):
-    import tables
-    f = tables.open_file(name)
-    array = f.root.data
-    a=np.empty(shape=array.shape, dtype=array.dtype)
-    a[:]=array[:]
-    f.close()
-    return a

@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
+
 import theano
 import theano.tensor as T
 
@@ -7,6 +9,7 @@ from ..utils.theano_utils import shared_zeros, floatX
 from ..utils.generic_utils import make_tuple
 
 from theano.sandbox.rng_mrg import MRG_RandomStreams as RandomStreams
+from six.moves import zip
 srng = RandomStreams()
 
 class Layer(object):
@@ -87,13 +90,13 @@ class Flatten(Layer):
         Reshape input to flat shape.
         First dimension is assumed to be nb_samples.
     '''
-    def __init__(self, size):
-        self.size = size
+    def __init__(self):
         self.params = []
 
     def output(self, train):
         X = self.get_input(train)
-        nshape = (X.shape[0], self.size)
+        size = theano.tensor.prod(X.shape) / X.shape[0]
+        nshape = (X.shape[0], size)
         return theano.tensor.reshape(X, nshape)
 
 
@@ -139,28 +142,38 @@ class Dense(Layer):
         output = self.activation(T.dot(X, self.W) + self.b)
         return output
 
-
-class Embedding(Layer):
+class TimeDistributedDense(Layer):
     '''
-        Turn a list of integers >=0 into a dense vector of fixed size. 
-        eg. [4, 50, 123, 26] -> [0.25, 0.1]
+       Apply a same DenseLayer for each dimension[1] (shared_dimension) input 
+       Especially useful after a recurrent network with 'return_sequence=True'
+       Tensor input dimensions:   (nb_sample, shared_dimension, input_dim)
+       Tensor output dimensions:  (nb_sample, shared_dimension, output_dim)
 
-        @input_dim: size of vocabulary (highest input integer + 1)
-        @out_dim: size of dense representation
     '''
-    def __init__(self, input_dim, output_dim, init='uniform', weights=None):
+    def __init__(self, input_dim, output_dim, init='uniform', activation='linear', weights=None):
         self.init = initializations.get(init)
+        self.activation = activations.get(activation)
         self.input_dim = input_dim
         self.output_dim = output_dim
 
-        self.input = T.imatrix()
+        self.input = T.tensor3()
         self.W = self.init((self.input_dim, self.output_dim))
-        self.params = [self.W]
+        self.b = shared_zeros((self.output_dim))
+
+        self.params = [self.W, self.b]
 
         if weights is not None:
             self.set_weights(weights)
 
     def output(self, train):
         X = self.get_input(train)
-        return self.W[X]
+
+        def act_func(X):
+            return self.activation(T.dot(X, self.W) + self.b)
+
+        output, _ = theano.scan(fn = act_func,
+                                sequences = X.dimshuffle(1,0,2),
+                                outputs_info=None)
+        return output.dimshuffle(1,0,2)
+
 
