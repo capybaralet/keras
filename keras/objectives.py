@@ -33,7 +33,7 @@ def binary_crossentropy(y_true, y_pred):
 def mse_angle(y_true, y_pred):
     '''Compute the mse between two predicted angles (in radians)
     '''
-    dist = T.min( (y_true - y_pred) % (2*np.pi), (y_pred - y_true) % (2*np.pi)) 
+    dist = T.minimum( (y_true - y_pred) % (2*np.pi), (y_pred - y_true) % (2*np.pi)) 
     return T.sqr(dist).mean()
 
 # aliases
