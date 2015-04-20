@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
+from __future__ import absolute_import, division
 
 import theano
 import theano.tensor as T
@@ -36,10 +36,13 @@ class Layer(object):
             weights.append(p.get_value())
         return weights
 
+    def get_config(self):
+        return {"name":self.__class__.__name__}
+
 
 class Dropout(Layer):
     '''
-        Hinton's dropout. 
+        Hinton's dropout.
     '''
     def __init__(self, p):
         self.p = p
@@ -55,6 +58,10 @@ class Dropout(Layer):
                 X *= retain_prob
         return X
 
+    def get_config(self):
+        return {"name":self.__class__.__name__,
+            "p":self.p}
+
 
 class Activation(Layer):
     '''
@@ -67,6 +74,10 @@ class Activation(Layer):
     def output(self, train):
         X = self.get_input(train)
         return self.activation(X)
+
+    def get_config(self):
+        return {"name":self.__class__.__name__,
+            "activation":self.activation.__name__}
 
 
 class Reshape(Layer):
@@ -84,6 +95,10 @@ class Reshape(Layer):
         nshape = make_tuple(X.shape[0], *self.dims)
         return theano.tensor.reshape(X, nshape)
 
+    def get_config(self):
+        return {"name":self.__class__.__name__,
+            "p":self.p}
+
 
 class Flatten(Layer):
     '''
@@ -95,7 +110,7 @@ class Flatten(Layer):
 
     def output(self, train):
         X = self.get_input(train)
-        size = theano.tensor.prod(X.shape) / X.shape[0]
+        size = theano.tensor.prod(X.shape) // X.shape[0]
         nshape = (X.shape[0], size)
         return theano.tensor.reshape(X, nshape)
 
@@ -116,6 +131,10 @@ class RepeatVector(Layer):
         tensors = [X]*self.n
         stacked = theano.tensor.stack(*tensors)
         return stacked.dimshuffle((1,0,2))
+
+    def get_config(self):
+        return {"name":self.__class__.__name__,
+            "n":self.n}
 
 
 class Dense(Layer):
@@ -142,9 +161,17 @@ class Dense(Layer):
         output = self.activation(T.dot(X, self.W) + self.b)
         return output
 
+    def get_config(self):
+        return {"name":self.__class__.__name__,
+            "input_dim":self.input_dim,
+            "output_dim":self.output_dim,
+            "init":self.init.__name__,
+            "activation":self.activation.__name__}
+
+
 class TimeDistributedDense(Layer):
     '''
-       Apply a same DenseLayer for each dimension[1] (shared_dimension) input 
+       Apply a same DenseLayer for each dimension[1] (shared_dimension) input
        Especially useful after a recurrent network with 'return_sequence=True'
        Tensor input dimensions:   (nb_sample, shared_dimension, input_dim)
        Tensor output dimensions:  (nb_sample, shared_dimension, output_dim)
@@ -176,4 +203,9 @@ class TimeDistributedDense(Layer):
                                 outputs_info=None)
         return output.dimshuffle(1,0,2)
 
-
+    def get_config(self):
+        return {"name":self.__class__.__name__,
+            "input_dim":self.input_dim,
+            "output_dim":self.output_dim,
+            "init":self.init.__name__,
+            "activation":self.activation.__name__}

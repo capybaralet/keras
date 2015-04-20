@@ -52,16 +52,25 @@ model.add(Dropout(0.5))
 model.add(Dense(256, nb_classes, init='normal'))
 model.add(Activation('softmax'))
 
-
 model.compile(loss='categorical_crossentropy', optimizer='adam')
-print(model.optimizer)
 
-print("Training...")
-model.fit(X_train, Y_train, nb_epoch=5, batch_size=batch_size)
-score = model.evaluate(X_test, Y_test, batch_size=batch_size)
-print('Test score:', score)
+# import cPickle
+# model = cPickle.load(open('testsave.m.pkl'))
 
-classes = model.predict_classes(X_test, batch_size=batch_size)
-acc = np_utils.accuracy(classes, y_test)
-print('Test accuracy:', acc)
+for v in range(3):
+    for sa in [True, False]:
+        for vs in [0, 0.1]:
+            print('='*40)
+            print('v:%d, sa:%r, vs:%f' % (v, sa, vs))
+            print("Training...")
+            model.fit(X_train, Y_train, nb_epoch=2, batch_size=batch_size, verbose=v, show_accuracy=sa, validation_split=vs)
+            score = model.evaluate(X_test, Y_test, batch_size=batch_size, verbose=v, show_accuracy=sa)
+            print('Test score:', score)
+
+            classes = model.predict_classes(X_test, batch_size=batch_size, verbose=v)
+            acc = np_utils.accuracy(classes, y_test)
+            print('Test accuracy:', acc)
+
+# model.save('testsave.m')
+
 
