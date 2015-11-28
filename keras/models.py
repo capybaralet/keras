@@ -343,8 +343,12 @@ class Sequential(Model, containers.Sequential):
     def compile(self, optimizer, loss, class_mode="categorical", theano_mode=None):
         self.optimizer = optimizers.get(optimizer)
 
-        self.loss = objectives.get(loss)
-        weighted_loss = weighted_objective(objectives.get(loss))
+        if type(loss) == str:
+            self.loss = objectives.get(loss)
+        else:
+            self.loss = loss
+
+        weighted_loss = weighted_objective(self.loss)
 
         # input of model
         self.X_train = self.get_input(train=True)

@@ -355,6 +355,38 @@ class MaxPooling2D(Layer):
         return dict(list(base_config.items()) + list(config.items()))
 
 
+class MeanPooling2D(Layer):
+    input_ndim = 4
+
+    def __init__(self, pool_size=(2, 2), stride=None, ignore_border=True, **kwargs):
+        super(MaxPooling2D, self).__init__(**kwargs)
+        self.input = T.tensor4()
+        self.pool_size = tuple(pool_size)
+        if stride is None:
+            stride = self.pool_size
+        self.stride = tuple(stride)
+        self.ignore_border = ignore_border
+
+    @property
+    def output_shape(self):
+        input_shape = self.input_shape
+        rows = pool_output_length(input_shape[2], self.pool_size[0], self.ignore_border, self.stride[0])
+        cols = pool_output_length(input_shape[3], self.pool_size[1], self.ignore_border, self.stride[1])
+        return (input_shape[0], input_shape[1], rows, cols)
+
+    def get_output(self, train=False):
+        X = self.get_input(train)
+        output = downsample.max_pool_2d(X, ds=self.pool_size, st=self.stride, ignore_border=self.ignore_border)
+        return output
+
+    def get_config(self):
+        config = {"name": self.__class__.__name__,
+                  "pool_size": self.pool_size,
+                  "ignore_border": self.ignore_border,
+                  "stride": self.stride}
+        base_config = super(MaxPooling2D, self).get_config()
+        return dict(list(base_config.items()) + list(config.items()))
+
 class UpSample1D(Layer):
     input_ndim = 3
 

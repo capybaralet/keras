@@ -39,6 +39,10 @@ def linear(x):
     return x
 
 
+def split_relu(x):
+    return T.concatenate((relu(x[:,0,:]), relu(T.abs_(x[:,1,:]))), 1)
+
+
 from .utils.generic_utils import get_from_module
 def get(identifier):
     return get_from_module(identifier, globals(), 'activation function')
