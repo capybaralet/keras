@@ -605,12 +605,13 @@ class ActivityRegularization(Layer):
         Layer that passes through its input unchanged, but applies an update
         to the cost function based on the activity.
     '''
-    def __init__(self, l1=0., l2=0., **kwargs):
+    def __init__(self, l1=0., l2=0., sparse_filtering=0., **kwargs):
         super(ActivityRegularization, self).__init__(**kwargs)
         self.l1 = l1
         self.l2 = l2
+        self.sparse_filtering = sparse_filtering
 
-        activity_regularizer = ActivityRegularizer(l1=l1, l2=l2)
+        activity_regularizer = ActivityRegularizer(l1=l1, l2=l2, sparse_filtering=sparse_filtering)
         activity_regularizer.set_layer(self)
         self.regularizers = [activity_regularizer]
 
@@ -620,7 +621,8 @@ class ActivityRegularization(Layer):
     def get_config(self):
         config = {"name": self.__class__.__name__,
                   "l1": self.l1,
-                  "l2": self.l2}
+                  "l2": self.l2,
+                  "sparse_filtering": self.sparse_filtering}
         base_config = super(ActivityRegularization, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
 
