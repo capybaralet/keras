@@ -76,13 +76,13 @@ class PermutationRegularizer(Regularizer):
     def __call__(self, x):
         regularization = 0
         if self.prob_term:
-            probability_term0 = ((K.sum(x, axis=0) - 1)**2).mean()
-            probability_term1 = ((K.sum(x, axis=1) - 1)**2).mean()
+            probability_term0 = K.mean((K.sum(x, axis=0) - 1)**2)
+            probability_term1 = K.mean((K.sum(x, axis=1) - 1)**2)
             regularization += self.prob_term * (probability_term0 + probability_term1)
         if self.entropy_term:
             coeff = 1
-            p0 = K.softmax(coeff * Wact)
-            p1 = K.softmax(coeff * Wact.T)
+            p0 = K.softmax(coeff * x)
+            p1 = K.softmax(coeff * K.transpose(x))
             regularization += self.entropy_term *  (K.sum(p0 * K.log(p0)) + K.sum(p1 * K.log(p1)))
         return regularization
 

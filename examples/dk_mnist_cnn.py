@@ -16,7 +16,9 @@ from keras.layers import Convolution2D, MaxPooling2D
 from keras.utils import np_utils
 from keras import backend as K
 
+from keras.layers import Reshape
 from keras.regularizers import PermutationRegularizer
+
 
 if 0:
     import argparse
@@ -35,7 +37,7 @@ for permuted, abstract, penalty in hparams:
 
     batch_size = 128
     nb_classes = 10
-    nb_epoch = 100
+    nb_epoch = 30
 
     # input image dimensions
     img_rows, img_cols = 28, 28
@@ -54,7 +56,9 @@ for permuted, abstract, penalty in hparams:
     if permuted:
         import numpy as np
         perm = np.random.permutation(784)
+        X_train, X_test = X_train.reshape((-1, 784)), X_test.reshape((-1, 784))
         X_train, X_test = X_train[:, perm], X_test[:, perm]
+        #X_train, X_test = X_train.reshape((-1, 784)), X_test.reshape((-1, 784))
 
 
     if not abstract:
@@ -85,7 +89,7 @@ for permuted, abstract, penalty in hparams:
 
     if abstract:
         if penalty:
-            model.add(Dense(784, input_shape=(784,)), W_regularizer=PermutationRegularizer())
+            model.add(Dense(784, input_shape=(784,), W_regularizer=PermutationRegularizer()))
         else:
             model.add(Dense(784, input_shape=(784,)))
         model.add(Reshape(input_shape=(784,), target_shape=input_shape))
