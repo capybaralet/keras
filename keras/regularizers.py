@@ -60,6 +60,38 @@ class EigenvalueRegularizer(Regularizer):
         return K.sum(regularization)
 
 
+class PermutationRegularizer(Regularizer):
+    """Regularizer for L1 and L2 regularization.
+
+    # Arguments
+        l1: Float; L1 regularization factor.
+        l2: Float; L2 regularization factor.
+    """
+
+    def __init__(self, prob_term=0.01, entropy_term=0.1):
+        self.prob_term = K.cast_to_floatx(prob_term)
+        self.entropy_term = K.cast_to_floatx(entropy_term)
+
+    # TODO
+    def __call__(self, x):
+        regularization = 0
+        if self.prob_term:
+            probability_term0 = ((K.sum(x, axis=0) - 1)**2).mean()
+            probability_term1 = ((K.sum(x, axis=1) - 1)**2).mean()
+            regularization += self.prob_term * (probability_term0 + probability_term1)
+        if self.entropy_term:
+            coeff = 1
+            p0 = K.softmax(coeff * Wact)
+            p1 = K.softmax(coeff * Wact.T)
+            regularization += self.entropy_term *  (K.sum(p0 * K.log(p0)) + K.sum(p1 * K.log(p1)))
+        return regularization
+
+    def get_config(self):
+        return {'name': self.__class__.__name__,
+                'l1': float(self.l1),
+                'l2': float(self.l2)}
+
+
 class L1L2Regularizer(Regularizer):
     """Regularizer for L1 and L2 regularization.
 
